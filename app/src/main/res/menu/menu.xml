@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/page_gallery"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_photo_24"
+        android:title="사진 보기"/>
+
+    <item
+        android:id="@+id/page_navigate"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_navigation_24"
+        android:title="방문 하기"/>
+
+    <item
+        android:id="@+id/page_review"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_create_24"
+        android:title="리뷰 쓰기"/>
+</menu>

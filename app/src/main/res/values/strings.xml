@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">WhatsFood</string>
+    <string name="count_photo">사진 %d/5</string>
+    <string name="index_photo">%d/%d</string>
+</resources>

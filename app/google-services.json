@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1056632122833",
+    "project_id": "whatsfood-5bdd3",
+    "storage_bucket": "whatsfood-5bdd3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056632122833:android:09eafa71fcdefb8d0f04f0",
+        "android_client_info": {
+          "package_name": "com.ashe.WhatsFood"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1056632122833-7bpou6ej18dthej1059785ipgb2rvok8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYMMtFbPEGq8KefzUKIfY1PVCj4vFoJ8s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1056632122833-7bpou6ej18dthej1059785ipgb2rvok8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
