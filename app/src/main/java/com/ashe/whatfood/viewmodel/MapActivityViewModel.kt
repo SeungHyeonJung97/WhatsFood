@@ -1,5 +1,6 @@
 package com.ashe.whatfood.viewmodel
 
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.location.Address
@@ -8,35 +9,37 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import com.ashe.whatfood.*
-import com.ashe.whatfood.Util.API_KEY
-import com.ashe.whatfood.Util.api
-import com.ashe.whatfood.Util.currentLocation
-import com.ashe.whatfood.Util.currentLocationlat
-import com.ashe.whatfood.Util.currentLocationlon
-import com.ashe.whatfood.Util.sharedListItems
-import com.ashe.whatfood.Util.urlList
+import com.ashe.whatfood.other.Util.API_KEY
+import com.ashe.whatfood.other.Util.api
+import com.ashe.whatfood.other.Util.currentLocationlat
+import com.ashe.whatfood.other.Util.currentLocationlon
+import com.ashe.whatfood.other.Util.sharedListItems
+import com.ashe.whatfood.other.Util.urlList
 import com.ashe.whatfood.dto.ListLayout
 import com.ashe.whatfood.dto.ResultSearchKeyword
 import com.ashe.whatfood.dto.ResultThumbnailImage
+import com.ashe.whatfood.other.Util
 import net.daum.mf.map.api.CalloutBalloonAdapter
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
+import org.jetbrains.anko.activityManager
 import org.jetbrains.anko.layoutInflater
 import org.jetbrains.anko.toast
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.IOException
+import java.lang.Exception
+import kotlin.math.abs
 
-class MapActivityViewModel : ViewModel() {
+class MapActivityViewModel() : ViewModel() {
+
     var listener: MapView.CurrentLocationEventListener? = null
     private lateinit var eventListener: MarkerEventListener
-    lateinit var map: MapView
+    lateinit var map:MapView
 
     var listItems = arrayListOf<ListLayout>()
     private var searchResult: ResultSearchKeyword? = null
@@ -56,7 +59,6 @@ class MapActivityViewModel : ViewModel() {
     var isFinish = MutableLiveData<Boolean>()
 
     fun setCurrentLocationTracking(context: Context) {
-        map = MapView(context)
         map.currentLocationTrackingMode =
             MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading
 
@@ -95,6 +97,9 @@ class MapActivityViewModel : ViewModel() {
         })
     }
 
+    fun setMapView(mapview: MapView){
+        map = mapview
+    }
     fun getThumbnailImage(keyword: String) {
         val call = api.getThumbnailImage(API_KEY, keyword)
 
@@ -133,14 +138,19 @@ class MapActivityViewModel : ViewModel() {
                 accuracyInMeters: Float
             ) {
                 var result = ""
-                val mapPointGeo = currentLocation?.mapPointGeoCoord
+                val mapPointGeo = currentLocation?.mapPointGeoCoord!!
                 val geocoder = Geocoder(context)
                 var addresses: List<Address>? = null
 
+                if(abs(currentLocationlat - mapPointGeo.latitude) < 0.001 ||
+                    abs(currentLocationlon - mapPointGeo.longitude) < 0.001){
+                    return
+                }
+
                 try {
                     addresses = geocoder.getFromLocation(
-                        mapPointGeo!!.latitude,
-                        mapPointGeo!!.longitude,
+                        mapPointGeo.latitude,
+                        mapPointGeo.longitude,
                         7
                     )
                     currentLocationlat = mapPointGeo.latitude
@@ -242,7 +252,6 @@ class MapActivityViewModel : ViewModel() {
         }
 
         override fun getPressedCalloutBalloon(p0: MapPOIItem?): View {
-            address.text = "getPressedCalloutBalloon"
             return mCalloutBalloon
         }
     }
@@ -260,37 +269,21 @@ class MapActivityViewModel : ViewModel() {
             poiItem: MapPOIItem?,
             p2: MapPOIItem.CalloutBalloonButtonType?
         ) {
-//            val builder = AlertDialog.Builder(context)
-//            val itemList = arrayOf("전화 걸기", "리뷰 남기기", "취소")
-//            builder.setTitle("${poiItem?.itemName}")
-//            builder.setItems(itemList) { dialog, which ->
-//                when (which) {
-//                    0 -> {
-//                        val tel =
-//                            "tel:${listItems.filter { it.name.equals(poiItem?.itemName) }[0].phone}"
-//                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse(tel))
-//                        context.startActivity(intent)
-//                    }
-//                    1 -> {
-//                        val intent = Intent(context, ReviewActivity::class.java)
-//                        intent.putExtra("itemName", "${poiItem?.itemName}")
-//                        context.startActivity(intent)
-//                    }
-//                    2 -> dialog.dismiss()   // 대화상자 닫기
-//                }
-//            }
-//            builder.show()
             getThumbnailImage(poiItem!!.itemName)
             sharedListItems = listItems
             val index = searchResult!!.documents.filter{ it.place_name.equals(poiItem?.itemName) }
             val url = index[0].place_url
             val destLocation = doubleArrayOf(index[0].y.toDouble(), index[0].x.toDouble())
 
-            val intent = Intent(context, DetailActivity::class.java)
-            intent.putExtra("itemName", "${poiItem?.itemName}")
-            intent.putExtra("itemUrl", url)
-            intent.putExtra("destLocation", destLocation)
-            context.startActivity(intent)
+            try {
+                val intent = Intent(context, DetailActivity::class.java)
+                intent.putExtra("itemName", "${poiItem?.itemName}")
+                intent.putExtra("itemUrl", url)
+                intent.putExtra("destLocation", destLocation)
+                context.startActivity(intent)
+            }catch(e:Exception){
+                Log.e("error",e.toString())
+            }
         }
 
         override fun onDraggablePOIItemMoved(p0: MapView?, p1: MapPOIItem?, p2: MapPoint?) {

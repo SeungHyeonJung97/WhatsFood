@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">WhatsFood</string>
+    <string name="app_name">오늘의 음식</string>
     <string name="count_photo">사진 %d/5</string>
     <string name="index_photo">%d/%d</string>
+    <string name="roulette_count">%d개</string>
 </resources>

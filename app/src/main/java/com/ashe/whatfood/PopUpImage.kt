@@ -4,7 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.view.Window
 import androidx.databinding.DataBindingUtil
-import com.ashe.whatfood.Util.urlList
+import com.ashe.whatfood.other.Util.urlList
 import com.ashe.whatfood.adapter.PopUpImageAdapter
 import com.ashe.whatfood.databinding.PopupImageBinding
 

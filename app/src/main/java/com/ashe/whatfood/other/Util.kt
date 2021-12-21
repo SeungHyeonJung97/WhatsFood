@@ -1,11 +1,9 @@
-package com.ashe.whatfood
+package com.ashe.whatfood.other
 
 import android.content.Context
 import android.content.ContextWrapper
 import android.location.LocationManager
-import android.widget.ImageView
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.ashe.whatfood.dto.Document
 import com.gun0912.tedpermission.PermissionListener
@@ -16,8 +14,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.ashe.whatfood.R
 import com.ashe.whatfood.dto.ListLayout
-import com.google.firebase.database.MutableData
-import net.daum.mf.map.api.MapPoint
 
 
 object Util {
@@ -36,6 +32,9 @@ object Util {
     var currentLocationlat = 0.0
     var currentLocationlon = 0.0
     var sharedListItems = arrayListOf<ListLayout>()
+
+    lateinit var savedItem: String
+    var saveOk = false
 
     var before_item = MapPOIItem()
     var after_item = MapPOIItem()

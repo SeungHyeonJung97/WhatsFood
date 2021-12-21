@@ -7,7 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.ashe.whatfood.Util.itemName
+import com.ashe.whatfood.other.Util.itemName
+import com.ashe.whatfood.adapter.ReviewFragAdapter
 import com.ashe.whatfood.databinding.PageReviewBinding
 import com.ashe.whatfood.dto.ReviewData
 import com.google.firebase.database.DataSnapshot
@@ -47,6 +48,9 @@ class ReviewFragment : Fragment() {
                     }
                 }
                 adapter.notifyDataSetChanged()
+                if(reviewData.isNullOrEmpty()){
+                    binding.reviewContainer.visibility = View.VISIBLE
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {

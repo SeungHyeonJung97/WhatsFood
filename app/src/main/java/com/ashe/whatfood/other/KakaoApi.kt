@@ -1,4 +1,4 @@
-package com.ashe.whatfood
+package com.ashe.whatfood.other
 
 import com.ashe.whatfood.dto.ResultSearchKeyword
 import com.ashe.whatfood.dto.ResultThumbnailImage

@@ -1,17 +1,15 @@
 package com.ashe.whatfood
 
-import android.content.pm.PackageManager
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Base64
-import android.util.Log
 import android.view.View
 import androidx.databinding.DataBindingUtil
-import com.ashe.whatfood.Util.searchResult
+import com.ashe.whatfood.other.Util.searchResult
 import com.ashe.whatfood.roulette.RotateListener
 import com.ashe.whatfood.databinding.ActivityMainBinding
+import com.ashe.whatfood.roulette.RouletteSettings.getRouletteSetting
 import org.jetbrains.anko.startActivity
-import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,20 +21,12 @@ class MainActivity : AppCompatActivity() {
         binding.activity = this
 
         binding.roulette.apply {
-            setRouletteDataList(listOf("한식", "중식", "양식", "일식"))
-            setRouletteSize(getRouletteDataList().size)
-            setRouletteTextColor(R.color.black)
-            setRouletteBorderLineColor(R.color.white)
-
-            getRouletteTextColor()
-            getRouletteTextSize()
+            getRouletteSetting(binding.roulette)
         }
 
         binding.resultBtn.setOnClickListener {
-            startActivity<MapActivity>()
-            searchResult = binding.textView.text.toString()
+           startActivity<MapActivity>()
         }
-
     }
 
     fun rotateRoulette() {
@@ -45,7 +35,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onRotateEnd(result: String) {
-                binding.textView.text = "$result"
+                binding.textView11.text = "$result 입니다."
+                searchResult = result
                 binding.resultBtn.visibility = View.VISIBLE
             }
         }

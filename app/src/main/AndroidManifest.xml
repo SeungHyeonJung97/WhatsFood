@@ -2,23 +2,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ashe.whatfood">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/roulette"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@drawable/roulette"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
-        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-        android:requestLegacyExternalStorage="true">
+        android:theme="@style/Theme.WhatsFood"
+        android:usesCleartextTraffic="true">
         <activity
-            android:name="com.ashe.whatfood.MainActivity"
+            android:name="com.ashe.whatfood.IntroActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,13 +26,29 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MapActivity"
-            android:exported="true"/>
-        <activity android:name=".DetailActivity"/>
-        <activity android:name=".ReviewActivity"/>
-        <activity android:name=".PasswordDialog" android:theme="@style/Theme.AppCompat.DayNight.Dialog"/>
-        <activity android:name=".PopUpImage" android:theme="@style/Theme.AppCompat.DayNight.Dialog.Alert"/>
-        <meta-data android:name="com.kakao.sdk.AppKey" android:value="261c34ca88ab7789f7f0b20b89168bcd"/>
+        <activity android:name=".HomeActivity" />
+        <activity android:name="com.ashe.whatfood.MainActivity" />
+        <activity
+            android:name=".MapActivity"
+            android:launchMode="singleTop"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".SettingActivity" />
+        <activity android:name=".DetailActivity" />
+        <activity android:name=".ReviewActivity" />
+        <activity
+            android:name=".PasswordDialog"
+            android:theme="@style/Theme.AppCompat.DayNight.Dialog" />
+        <activity
+            android:name=".PopUpImage"
+            android:theme="@style/Theme.AppCompat.DayNight.Dialog.Alert" />
+
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="261c34ca88ab7789f7f0b20b89168bcd" />
 
     </application>
 

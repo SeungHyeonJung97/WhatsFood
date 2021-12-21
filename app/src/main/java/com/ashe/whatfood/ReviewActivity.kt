@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ashe.whatfood.adapter.ReviewAdapter
 import com.ashe.whatfood.databinding.ActivityReviewBinding
 import com.ashe.whatfood.dto.ReviewData
+import com.ashe.whatfood.other.Util
 import com.ashe.whatfood.viewmodel.ReviewActivityViewModel
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -71,6 +72,8 @@ class ReviewActivity : AppCompatActivity() {
             }
         }
         binding.clImage.setOnClickListener {
+            permissionCheck()
+
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             intent.type = "image/*"
             startActivityForResult(intent, PICK_IMAGE)
@@ -78,6 +81,10 @@ class ReviewActivity : AppCompatActivity() {
 
         binding.finishBtn.setOnClickListener {
             dialogShow()
+        }
+
+        binding.ivPrev.setOnClickListener {
+            finish()
         }
     }
 
@@ -96,6 +103,7 @@ class ReviewActivity : AppCompatActivity() {
                     if(data == null) return
                     postPassword = data.getStringExtra("data").toString()
                     viewModel.upload( postPassword, imagePaths)
+                    finish()
                 }
                 PICK_IMAGE -> {
                     if (data == null) return
@@ -103,6 +111,7 @@ class ReviewActivity : AppCompatActivity() {
                         contentResolver.query(Uri.parse(data.data.toString()), null, null, null, null)
                     cursor!!.moveToFirst()
                     val realPath = cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DATA))
+//                    val parcelFileDescriptor = contentResolver.openFileDescriptor()
                     imagePaths.add(realPath)
                     reviewImageList.add(data.data.toString())
                     binding.countPhotoTv.text =
@@ -114,6 +123,27 @@ class ReviewActivity : AppCompatActivity() {
         }else{
             toast("오류가 발생했습니다. 다시 시도해주세요")
         }
+    }
+
+    private fun permissionCheck(){
+        val permissionListener = object : PermissionListener {
+            override fun onPermissionGranted() {
+                toast("권한이 승인되었습니다.")
+            }
+
+            override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+                toast("권한이 거절되었습니다.")
+            }
+        }
+
+        TedPermission.with(this)
+            .setPermissionListener(permissionListener)
+            .setDeniedMessage("접근 거부하셨습니다.\n[설정] - [권한]에서 권한을 허용해주세요.")
+            .setPermissions(
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+            .check()
     }
 
 }

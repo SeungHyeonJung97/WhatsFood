@@ -1,7 +1,6 @@
 package com.ashe.whatfood
 
 import android.content.Intent
-import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
 import android.text.util.Linkify
@@ -17,17 +16,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.ashe.whatfood.Util.currentLocation
-import com.ashe.whatfood.Util.currentLocationlat
-import com.ashe.whatfood.Util.currentLocationlon
-import com.ashe.whatfood.Util.itemName
-import com.ashe.whatfood.Util.sharedListItems
-import com.ashe.whatfood.Util.urlList
+import com.ashe.whatfood.other.Util.currentLocationlat
+import com.ashe.whatfood.other.Util.currentLocationlon
+import com.ashe.whatfood.other.Util.itemName
 import com.ashe.whatfood.databinding.ActivityDetailBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import retrofit2.http.Url
-import java.net.URL
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 class DetailActivity : AppCompatActivity() {
@@ -73,6 +66,8 @@ class DetailActivity : AppCompatActivity() {
             intent.putExtra("itemName", itemName)
             startActivity(intent)
         }
+
+        binding.ivPrev.setOnClickListener { finish() }
 
 
         Linkify.addLinks(binding.textView3, pattern, url, null, mTransform)
