@@ -16,6 +16,8 @@ import com.ashe.whatfood.adapter.ReviewAdapter
 import com.ashe.whatfood.databinding.ActivityReviewBinding
 import com.ashe.whatfood.dto.ReviewData
 import com.ashe.whatfood.other.Util
+import com.ashe.whatfood.other.Util.itemName
+import com.ashe.whatfood.other.Util.savedPost
 import com.ashe.whatfood.viewmodel.ReviewActivityViewModel
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -44,6 +46,15 @@ class ReviewActivity : AppCompatActivity() {
 
         Settings()
         clickListener()
+
+        if(intent.hasExtra("key")){
+            binding.nameTv.text = itemName
+            for(i in 0..savedPost.grade){
+                iv[i].setImageResource(R.drawable.star_max)
+            }
+            binding.reviewTv.setText(savedPost.comment)
+            savedPost.image.forEach { reviewImageList.add(it) }
+        }
     }
 
     private fun Settings() {
@@ -54,6 +65,7 @@ class ReviewActivity : AppCompatActivity() {
 
         if (intent.hasExtra("itemName")) {
             viewModel.itemName = intent.getStringExtra("itemName").toString()
+
         }
 
         iv = listOf(
@@ -102,7 +114,8 @@ class ReviewActivity : AppCompatActivity() {
                 RETURN_DIALOG -> {
                     if(data == null) return
                     postPassword = data.getStringExtra("data").toString()
-                    viewModel.upload( postPassword, imagePaths)
+                    val comment = binding.reviewTv.text.toString()
+                    viewModel.upload(comment, postPassword, imagePaths)
                     finish()
                 }
                 PICK_IMAGE -> {
@@ -121,18 +134,18 @@ class ReviewActivity : AppCompatActivity() {
                 }
             }
         }else{
-            toast("오류가 발생했습니다. 다시 시도해주세요")
+            // toast("오류가 발생했습니다. 다시 시도해주세요")
         }
     }
 
     private fun permissionCheck(){
         val permissionListener = object : PermissionListener {
             override fun onPermissionGranted() {
-                toast("권한이 승인되었습니다.")
+               //  toast("권한이 승인되었습니다.")
             }
 
             override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
-                toast("권한이 거절되었습니다.")
+               //  toast("권한이 거절되었습니다.")
             }
         }
 

@@ -1,10 +1,25 @@
 package com.ashe.whatfood
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.ashe.whatfood.databinding.ActivityHomeBinding
+import com.ashe.whatfood.dto.Place
+import com.ashe.whatfood.notification.GeofenceBroadcastReceiver
+import com.ashe.whatfood.notification.Notification.addDinnerPush
+import com.ashe.whatfood.notification.Notification.addLunchPush
+import com.ashe.whatfood.notification.Notification.getGeofence
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import org.jetbrains.anko.startActivity
 
 class HomeActivity : AppCompatActivity() {
@@ -28,4 +43,6 @@ class HomeActivity : AppCompatActivity() {
             finish()
         }
     }
+
+
 }

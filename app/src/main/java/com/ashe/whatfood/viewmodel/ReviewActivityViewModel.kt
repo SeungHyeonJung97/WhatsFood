@@ -42,15 +42,16 @@ class ReviewActivityViewModel() : ViewModel() {
         _grade.postValue(count + 1)
     }
 
-    fun saveData(comment: String) {
+    fun saveData(comment: String, password: String) {
 
         val currentTime = SimpleDateFormat("yyyy-MM-dd").format(System.currentTimeMillis())
         val data = ReviewData(
-            itemName,
-            _grade.value!!,
-            comment,
-            downloadPath,
-            currentTime
+            postId = (System.currentTimeMillis()).toString(),
+            grade = _grade.value!!,
+            comment = comment,
+            image = downloadPath,
+            datetime = currentTime,
+            password = password
         )
 
         dbRef.child("Review").child(itemName).push().setValue(data)
@@ -58,7 +59,7 @@ class ReviewActivityViewModel() : ViewModel() {
     }
 
 
-    fun upload(comment: String, images: List<String>) {
+    fun upload(comment: String,password: String, images: List<String>) {
         var result = false
         images.forEach {
             val file = Uri.fromFile(File(it))
@@ -73,7 +74,7 @@ class ReviewActivityViewModel() : ViewModel() {
                     downloadPath.add(uri.toString())
                     Log.e("Error",uri.toString())
                     if (downloadPath.size == images.size) {
-                        saveData(comment)
+                        saveData(comment, password)
                     }
                 }?.addOnFailureListener{
                     Log.e("Error",it.toString())

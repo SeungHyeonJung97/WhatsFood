@@ -27,15 +27,20 @@ class DetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailBinding
     var state = MutableLiveData<String>()
     private lateinit var destLocation: DoubleArray
+    private var url = ""
+    private var phoneNum = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_detail)
 
         state.observe(this) {
-            Log.e("Detail","${state.value}")
+            Log.e("Detail", "${state.value}")
             if (it.equals("Review")) {
                 binding.button2.visibility = View.VISIBLE
-            }else{
+                binding.clCall.visibility = View.GONE
+            } else {
+                binding.clCall.visibility = View.VISIBLE
                 binding.button2.visibility = View.GONE
             }
         }
@@ -43,23 +48,22 @@ class DetailActivity : AppCompatActivity() {
         if (intent!!.hasExtra("itemName")) {
             itemName = intent!!.getStringExtra("itemName").toString()
         }
-        var url = ""
         if (intent.hasExtra("itemName") || intent.hasExtra("itemUrl")) {
             binding.tvName.text = intent.getStringExtra("itemName")
             url = intent.getStringExtra("itemUrl").toString()
         }
-        if(intent.hasExtra("destLocation")) {
+        if (intent.hasExtra("destLocation")) {
             val data = intent.getDoubleArrayExtra("destLocation")!!
             destLocation = doubleArrayOf(data[0], data[1])
+        }
+        if(intent.hasExtra("phoneNum")){
+            phoneNum = intent.getStringExtra("phoneNum")!!
+            binding.tvCall.text = phoneNum
         }
 
         binding.viewPager.adapter =
             ViewPagerAdapter(supportFragmentManager, lifecycle)
         binding.viewPager.registerOnPageChangeCallback(ViewPagerPageChangeCallback())
-
-        val pattern = Pattern.compile("상세 정보 확인하기")
-
-        val mTransform = Linkify.TransformFilter { match, url -> "" }
 
         binding.button2.setOnClickListener {
             val intent = Intent(this, ReviewActivity::class.java)
@@ -69,8 +73,17 @@ class DetailActivity : AppCompatActivity() {
 
         binding.ivPrev.setOnClickListener { finish() }
 
+        binding.textView3.setOnClickListener {
+            val intent = Intent(this, DetailWebActivity::class.java)
+            intent.putExtra("url",url)
+            startActivity(intent)
+        }
 
-        Linkify.addLinks(binding.textView3, pattern, url, null, mTransform)
+        binding.clCall.setOnClickListener {
+            val uri = "tel:$phoneNum"
+            val intent = Intent(Intent.ACTION_DIAL, Uri.parse(uri))
+            startActivity(intent)
+        }
 
         binding.navBottom.setOnNavigationItemSelectedListener(object :
             BottomNavigationView.OnNavigationItemSelectedListener {
@@ -82,8 +95,9 @@ class DetailActivity : AppCompatActivity() {
                         return true
                     }
                     R.id.page_navigate -> {
-                        Log.e("detail","${destLocation[0]}, ${destLocation[1]}")
-                        val scheme = "kakaomap://route?sp=$currentLocationlat,$currentLocationlon&ep=${destLocation[0]},${destLocation[1]}&by=FOOT"
+                        Log.e("detail", "${destLocation[0]}, ${destLocation[1]}")
+                        val scheme =
+                            "kakaomap://route?sp=$currentLocationlat,$currentLocationlon&ep=${destLocation[0]},${destLocation[1]}&by=FOOT"
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(scheme))
                         startActivity(intent)
                     }

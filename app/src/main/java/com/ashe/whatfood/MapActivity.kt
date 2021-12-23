@@ -1,25 +1,34 @@
 package com.ashe.whatfood
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.size
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.ashe.whatfood.other.Util.after_item
-import com.ashe.whatfood.other.Util.before_item
-import com.ashe.whatfood.other.Util.checkLocationService
-import com.ashe.whatfood.other.Util.isGranted
-import com.ashe.whatfood.other.Util.permissionCheck
 import com.ashe.whatfood.other.Util.searchResult
 import com.ashe.whatfood.adapter.ListAdapter
 import com.ashe.whatfood.databinding.ActivityMapBinding
 import com.ashe.whatfood.dto.ListLayout
+import com.ashe.whatfood.notification.GeofenceBroadcastReceiver
+import com.ashe.whatfood.notification.Notification
+import com.ashe.whatfood.notification.Notification.getGeofence
+import com.ashe.whatfood.other.Util
 import com.ashe.whatfood.other.Util.saveOk
 import com.ashe.whatfood.other.Util.savedItem
 import com.ashe.whatfood.viewmodel.MapActivityViewModel
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
@@ -35,6 +44,22 @@ class MapActivity : AppCompatActivity() {
     private var keyword = ""
     private var address = ""
 
+    var before_item = MapPOIItem()
+    var after_item = MapPOIItem()
+
+    private val MY_PERMISSIONS_REQ_ACCESS_FINE_LOCATION = 100
+    private val MY_PERMISSIONS_REQ_ACCESS_BACKGROUND_LOCATION = 101
+
+    private val geofencingClient: GeofencingClient by lazy {
+        LocationServices.getGeofencingClient(this)
+    }
+
+    val geofenceList: MutableList<Geofence> by lazy {
+        mutableListOf(
+            getGeofence("서밋코퍼레이션:음식점 > 회사", Pair(37.40088, 126.96938))
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.e("MapActivity", "onCreate")
@@ -47,6 +72,8 @@ class MapActivity : AppCompatActivity() {
         Observe()
         Listener()
 
+        Notification.addLunchPush(this)
+        Notification.addDinnerPush(this)
     }
 
     private fun Observe() {
@@ -63,12 +90,27 @@ class MapActivity : AppCompatActivity() {
                 binding.kakaoMap.addView(mapViewModel.map)
             }
         }
-
         mapViewModel.listItem.observe(this) {
             listItems = it
+            listItems.forEach {
+                val reqId = "${it.name}:${it.category}"
+                geofenceList.add(getGeofence(reqId, Pair(it.y, it.x)))
+            }
             binding.clRecyclerView.visibility = View.VISIBLE
             listAdapter.itemList = listItems
             listAdapter.notifyDataSetChanged()
+        }
+        mapViewModel.nearbyRestaurants.observe(this) { places ->
+            places.forEach {
+                val reqId = "${it.place_name}:${it.category_name}"
+                geofenceList.add(
+                    getGeofence(
+                        reqId,
+                        Pair(it.y.toDouble(), it.x.toDouble())
+                    )
+                )
+            }
+            // Log.e("Map","${geofenceList}")
         }
     }
 
@@ -87,7 +129,10 @@ class MapActivity : AppCompatActivity() {
 
                     before_item = mapViewModel.map.findPOIItemByName(listItems[position].name)[0]
                 }
-                itemRenewal()
+                after_item = before_item
+                mapViewModel.map.removePOIItem(after_item)
+                after_item?.markerType = MapPOIItem.MarkerType.YellowPin
+                mapViewModel.map.addPOIItem(after_item)
             }
         })
 
@@ -97,13 +142,6 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    private fun itemRenewal() {
-        after_item = before_item
-        mapViewModel.map.removePOIItem(after_item)
-        after_item?.markerType = MapPOIItem.MarkerType.YellowPin
-        mapViewModel.map.addPOIItem(after_item)
-    }
-
     private fun Settings() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_map)
 
@@ -111,25 +149,99 @@ class MapActivity : AppCompatActivity() {
 
         mapViewModel =
             ViewModelProvider(this).get(
-                MapActivityViewModel::class.java)
+                MapActivityViewModel::class.java
+            )
 
         mapViewModel.setMapView(map)
 
         binding.activity = mapViewModel
 
+        mapViewModel.setCurrentLocationTracking(this)
 
-        if (checkLocationService(this)) {
-            if (!isGranted) {
-                permissionCheck(this)
-            }
-            mapViewModel.setCurrentLocationTracking(this)
-        } else {
-            toast("GPS를 켜주세요 !")
-        }
-
-        if(saveOk){
+        if (saveOk) {
             binding.clRecyclerView.visibility = View.VISIBLE
             mapViewModel.searchKeyword(savedItem)
+        }
+    }
+
+    private fun addGeofences() {
+        checkPermission()
+        geofencingClient.addGeofences(getGeofencingRequest(geofenceList), geofencePendingIntent)
+            .run {
+                addOnSuccessListener {
+                  //   Toast.makeText(this@MapActivity, "add Success", Toast.LENGTH_LONG).show()
+                }
+                addOnFailureListener {
+                  //   Toast.makeText(this@MapActivity, "add Fail", Toast.LENGTH_LONG).show()
+                }
+            }
+    }
+
+    private val geofencePendingIntent: PendingIntent by lazy {
+        val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
+        PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    private fun getGeofencingRequest(list: List<Geofence>): GeofencingRequest {
+        return GeofencingRequest.Builder().apply {
+            // Geofence 이벤트는 진입시 부터 처리할 때
+            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            addGeofences(list)    // Geofence 리스트 추가
+        }.build()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            MY_PERMISSIONS_REQ_ACCESS_FINE_LOCATION,
+            MY_PERMISSIONS_REQ_ACCESS_BACKGROUND_LOCATION -> {
+                grantResults.apply {
+                    if (this.isNotEmpty()) {
+                        this.forEach {
+                            if (it != PackageManager.PERMISSION_GRANTED) {
+                                checkPermission()
+                                return
+                            }
+                        }
+                    } else {
+                        checkPermission()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkPermission() {
+        val permissionAccessFineLocationApproved = ActivityCompat
+            .checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+
+        if (permissionAccessFineLocationApproved) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val backgroundLocationPermissionApproved = ActivityCompat
+                    .checkSelfPermission(
+                        this,
+                        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ) ==
+                        PackageManager.PERMISSION_GRANTED
+
+                if (!backgroundLocationPermissionApproved) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                        MY_PERMISSIONS_REQ_ACCESS_BACKGROUND_LOCATION
+                    )
+                }
+            }
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                MY_PERMISSIONS_REQ_ACCESS_FINE_LOCATION
+            )
         }
     }
 
@@ -138,7 +250,6 @@ class MapActivity : AppCompatActivity() {
 
         if (binding.kakaoMap.size == 0) {
             mapViewModel.reload(this)
-            itemRenewal()
             binding.kakaoMap.addView(mapViewModel.map)
         }
         super.onRestart()
@@ -146,15 +257,16 @@ class MapActivity : AppCompatActivity() {
 
     override fun onStop() {
         Log.e("MapActivity", "onStop")
-
         binding.kakaoMap.removeAllViews()
         mapViewModel.isFinish.postValue(false)
+
+        addGeofences()
+        Log.e("Map", "${geofenceList}")
         super.onStop()
     }
 
     override fun onDestroy() {
         Log.e("MapActivity", "onDestroy")
-
         super.onDestroy()
     }
 }

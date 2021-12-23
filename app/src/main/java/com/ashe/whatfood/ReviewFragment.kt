@@ -43,13 +43,14 @@ class ReviewFragment : Fragment() {
                         restaurant.children.forEach {
                             reviewData.add(ReviewData.from(it.value as Map<Any, Any>))
                             Log.e("review","${reviewData}")
-
                         }
                     }
                 }
                 adapter.notifyDataSetChanged()
                 if(reviewData.isNullOrEmpty()){
                     binding.reviewContainer.visibility = View.VISIBLE
+                }else{
+                    binding.reviewContainer.visibility = View.GONE
                 }
             }
 

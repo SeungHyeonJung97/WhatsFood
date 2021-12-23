@@ -10,4 +10,8 @@
         <item>#7bc043</item>
         <item>#f37735</item>
     </string-array>
+    <string-array name="settings">
+        <item>수정하기</item>
+        <item>삭제하기</item>
+    </string-array>
 </resources>

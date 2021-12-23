@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.location.LocationManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
+import com.ashe.whatfood.MapActivity
 import com.ashe.whatfood.dto.Document
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
@@ -14,6 +15,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.ashe.whatfood.R
 import com.ashe.whatfood.dto.ListLayout
+import com.ashe.whatfood.dto.Place
+import com.ashe.whatfood.dto.ReviewData
+import org.jetbrains.anko.startActivity
 
 
 object Util {
@@ -27,17 +31,18 @@ object Util {
     var urlList = MutableLiveData<List<Document>>()
     var itemName = ""
 
+    var targetKey = ""
+
     var currentLocation = ""
 
     var currentLocationlat = 0.0
     var currentLocationlon = 0.0
     var sharedListItems = arrayListOf<ListLayout>()
 
+    lateinit var savedPost:ReviewData
+
     lateinit var savedItem: String
     var saveOk = false
-
-    var before_item = MapPOIItem()
-    var after_item = MapPOIItem()
 
     val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
@@ -49,12 +54,10 @@ object Util {
     fun permissionCheck(context: Context) {
         val permissionListener = object : PermissionListener {
             override fun onPermissionGranted() {
-                isGranted = true
-                context.toast("권한이 승인되었습니다.")
+                context.startActivity<MapActivity>()
             }
 
             override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
-                context.toast("위치 권한이 거절되었습니다.")
             }
         }
 
@@ -63,7 +66,8 @@ object Util {
             .setDeniedMessage("접근 거부하셨습니다.\n[설정] - [권한]에서 권한을 허용해주세요.")
             .setPermissions(
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
             .check()
     }

@@ -1,6 +1,7 @@
 package com.ashe.whatfood
 
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -8,8 +9,10 @@ import androidx.databinding.DataBindingUtil
 import com.ashe.whatfood.other.Util.searchResult
 import com.ashe.whatfood.roulette.RotateListener
 import com.ashe.whatfood.databinding.ActivityMainBinding
+import com.ashe.whatfood.other.Util
 import com.ashe.whatfood.roulette.RouletteSettings.getRouletteSetting
 import org.jetbrains.anko.startActivity
+import org.jetbrains.anko.toast
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,7 +28,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.resultBtn.setOnClickListener {
-           startActivity<MapActivity>()
+            if (Util.checkLocationService(this)) {
+                Util.permissionCheck(this)
+            } else {
+                toast("GPS를 켜주세요 !")
+            }
         }
     }
 

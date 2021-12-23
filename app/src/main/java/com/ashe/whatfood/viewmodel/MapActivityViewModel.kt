@@ -1,6 +1,7 @@
 package com.ashe.whatfood.viewmodel
 
 import android.app.Application
+import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.location.Address
@@ -18,9 +19,13 @@ import com.ashe.whatfood.other.Util.currentLocationlon
 import com.ashe.whatfood.other.Util.sharedListItems
 import com.ashe.whatfood.other.Util.urlList
 import com.ashe.whatfood.dto.ListLayout
+import com.ashe.whatfood.dto.Place
 import com.ashe.whatfood.dto.ResultSearchKeyword
 import com.ashe.whatfood.dto.ResultThumbnailImage
+import com.ashe.whatfood.other.RecommendMenu.savePreference
 import com.ashe.whatfood.other.Util
+import com.ashe.whatfood.other.Util.savedItem
+import com.ashe.whatfood.other.Util.searchResult
 import net.daum.mf.map.api.CalloutBalloonAdapter
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
@@ -39,7 +44,7 @@ class MapActivityViewModel() : ViewModel() {
 
     var listener: MapView.CurrentLocationEventListener? = null
     private lateinit var eventListener: MarkerEventListener
-    lateinit var map:MapView
+    lateinit var map: MapView
 
     var listItems = arrayListOf<ListLayout>()
     private var searchResult: ResultSearchKeyword? = null
@@ -58,6 +63,8 @@ class MapActivityViewModel() : ViewModel() {
 
     var isFinish = MutableLiveData<Boolean>()
 
+    var nearbyRestaurants = MutableLiveData<List<Place>>()
+
     fun setCurrentLocationTracking(context: Context) {
         map.currentLocationTrackingMode =
             MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading
@@ -74,6 +81,25 @@ class MapActivityViewModel() : ViewModel() {
         map.setCalloutBalloonAdapter(CustomBalloonAdapter(context.layoutInflater, listItems))
         map.setPOIItemEventListener(eventListener)
 
+    }
+
+    fun searchCategory(category: String, x: Double, y: Double, radius: Int, pageNum: Int) {
+        val call =
+            api.getNearbyRestaurants(API_KEY, category, x.toString(), y.toString(), radius, pageNum)
+
+        call.enqueue(object : Callback<ResultSearchKeyword> {
+            override fun onResponse(
+                call: Call<ResultSearchKeyword>,
+                response: Response<ResultSearchKeyword>
+            ) {
+                nearbyRestaurants.postValue(response.body()!!.documents)
+            }
+
+            override fun onFailure(call: Call<ResultSearchKeyword>, t: Throwable) {
+                Log.e("Retrofit", "통신 실패 : ${t.message}")
+            }
+
+        })
     }
 
     fun searchKeyword(keyword: String) {
@@ -97,9 +123,10 @@ class MapActivityViewModel() : ViewModel() {
         })
     }
 
-    fun setMapView(mapview: MapView){
+    fun setMapView(mapview: MapView) {
         map = mapview
     }
+
     fun getThumbnailImage(keyword: String) {
         val call = api.getThumbnailImage(API_KEY, keyword)
 
@@ -142,8 +169,9 @@ class MapActivityViewModel() : ViewModel() {
                 val geocoder = Geocoder(context)
                 var addresses: List<Address>? = null
 
-                if(abs(currentLocationlat - mapPointGeo.latitude) < 0.001 ||
-                    abs(currentLocationlon - mapPointGeo.longitude) < 0.001){
+                if (abs(currentLocationlat - mapPointGeo.latitude) < 0.001 ||
+                    abs(currentLocationlon - mapPointGeo.longitude) < 0.001
+                ) {
                     return
                 }
 
@@ -155,15 +183,17 @@ class MapActivityViewModel() : ViewModel() {
                     )
                     currentLocationlat = mapPointGeo.latitude
                     currentLocationlon = mapPointGeo.longitude
+
+                    searchCategory("FD6", currentLocationlon, currentLocationlat, 200, 1)
                 } catch (ioException: IOException) {
                     //네트워크 문제
-                    context.toast("지오코더 서비스 사용불가")
-                    context.toast("지오코더 서비스 사용불가")
+                   //  context.toast("지오코더 서비스 사용불가")
+                   //  context.toast("지오코더 서비스 사용불가")
                 } catch (illegalArgumentException: IllegalArgumentException) {
-                    context.toast("잘못된 GPS 좌표")
+                   //  context.toast("잘못된 GPS 좌표")
                 }
                 if (addresses == null || addresses.size == 0) {
-                    context.toast("주소 미발견")
+                    // context.toast("주소 미발견")
                 }
 
                 val address = addresses!!.get(0);
@@ -271,18 +301,21 @@ class MapActivityViewModel() : ViewModel() {
         ) {
             getThumbnailImage(poiItem!!.itemName)
             sharedListItems = listItems
-            val index = searchResult!!.documents.filter{ it.place_name.equals(poiItem?.itemName) }
+            val index = searchResult!!.documents.filter { it.place_name.equals(poiItem?.itemName) }
             val url = index[0].place_url
             val destLocation = doubleArrayOf(index[0].y.toDouble(), index[0].x.toDouble())
-
+            Log.d("keyword", savedItem)
             try {
                 val intent = Intent(context, DetailActivity::class.java)
                 intent.putExtra("itemName", "${poiItem?.itemName}")
                 intent.putExtra("itemUrl", url)
                 intent.putExtra("destLocation", destLocation)
+                intent.putExtra("phoneNum", index[0].phone)
+
+                savePreference(Util.searchResult, context)
                 context.startActivity(intent)
-            }catch(e:Exception){
-                Log.e("error",e.toString())
+            } catch (e: Exception) {
+                Log.e("error", e.toString())
             }
         }
 
@@ -296,4 +329,5 @@ class MapActivityViewModel() : ViewModel() {
         Log.e("ViewModel", "cleared")
         super.onCleared()
     }
+
 }
